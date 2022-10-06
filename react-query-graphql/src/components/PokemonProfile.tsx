@@ -1,29 +1,28 @@
 import { Circle, Flex, Heading, Image, Stack, Text } from "@chakra-ui/react";
 
-export interface Img {
+export interface IPoke {
     name: string;
     id: number;
-}
+  }
 
 interface Props {
-  props: Img;
+  props: IPoke;
 }
 
-function PokemonImage({ props }: Props) {
-  console.log(props);
+export default function PokemonProfile({ props }: Props) {
   return (
-    <Flex >
+    <Flex justify={"center"} flex={1}>
       <Stack align={"center"}>
-        <Heading >{props.id}</Heading>
-        <Text >
+        <Heading color={"yellow"}>{props.id}</Heading>
+        <Text fontSize={"2xl"} fontWeight="bold" textTransform={"uppercase"}>
           {props.name}
         </Text>
-        <Circle bg={"orange"} border="4px">
+        <Circle bg={"yellow.200"}>
           <Image
             w={{ base: "100px", sm: "150px", lg: "200px" }}
             h={{ base: "100px", sm: "150px", lg: "200px" }}
             objectFit={"fill"}
-            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${props.id}.png`}
+            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${props.id}.gif`}
             alt="pokemon-image"
           />
         </Circle>
@@ -31,5 +30,3 @@ function PokemonImage({ props }: Props) {
     </Flex>
   );
 }
-
-export default PokemonImage;

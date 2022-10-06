@@ -1,79 +1,55 @@
-import {
-  Box,
-  Button,
-  Heading,
-  HStack,
-  Image,
-  Spacer,
-  Spinner,
-  Stack,
-} from "@chakra-ui/react";
-import { useState } from "react";
-import request from "graphql-request";
-import { useQuery } from "react-query";
-import { PokemonQuery } from "../components/PokemonNames";
+import { useQuery } from "@apollo/client";
+import { Box, Heading, HStack, Img, Stack } from "@chakra-ui/react";
+import { GET_POKEMON_LIST, PokemonQuery } from "../graphQL/GetPokemonList"
+// import { InView } from "react-intersection-observer";
+import PokemonCards from "../components/PokemonNames";
+import ShowLoading from "../components/ShowLoading";
+import ShowError from "../components/ShowError";
+import InfiniteScroll from "react-infinite-scroll-component";
 import PokemonNames from "../components/PokemonNames";
-import GET_POKEMONS from "../graphQL/GET_POKEMONS";
-import { Link } from "@tanstack/react-location";
 
 export default function Home() {
-  const [page, setPage] = useState(0);
+  const { data, error, fetchMore } = useQuery<PokemonQuery>(GET_POKEMON_LIST, {
+    variables: { offset: 0, limit: 10 },
+  });
 
-  const endpoint = "https://graphql-pokeapi.graphcdn.app/";
-  const gqlVariables = {
-    limit: 10, 
-    offset: page * 10, 
+  const loadMore = () => {
+    fetchMore({ variables: { offset: data!.pokemons.results.length } });
   };
-  const fetchData = async (page: any) =>
-    await request(endpoint, GET_POKEMONS, gqlVariables);
 
-  const { data, isFetching, error, isPreviousData } = useQuery<PokemonQuery>(
-    ["pokemons", page], () => fetchData(page), { keepPreviousData: true}
-  );
+  console.log(data);
 
-  console.log(data)
+  const currentLength = data ? data.pokemons.results.length : 0;
+  const hasMore = data ? data.pokemons.count > currentLength : true;
+
   return (
-    <>
-      <Box >
+    <Box maxW={"full"} alignContent={"center"} bg="blue.200">
 
-        <Stack >
-          <Heading padding={2 }>
-            <Image src="../image/poke_logo.png" alt="../image/poke_logo.png"  boxSize='100px'
+      <Stack alignItems={"center"}>
+        <Heading p={4}>
+          <HStack>
+            <Img src="./image/poke_logo.png" alt="./image/poke_logo.png"
+            h={{ base: "100px", sm: "100px", md: "80px", lg: "100px" }}
+            w={{ base: "160px", sm: "160px", md: "180px", lg: "130px" }}
             />
-            Pokemons
-          </Heading>
-          <Box padding={2}>Page {page + 1}</Box>
+          </HStack>
+          <Stack>
+            
+          </Stack>
+        </Heading>
+        {error && <ShowError />}
+      </Stack>
 
-        </Stack>
-        <Stack textAlign={"center"}>
-        <Link to="/scroll">
-          <Button bg={"orange"} type="button" top={-50}>Go to Scroll</Button>
-        </Link>
-        </Stack>
-          <Button
-            left={1250}
-            top={-100}
-            colorScheme={"orange"}
-            disabled={!page}
-            onClick={() => setPage((prev) => prev - 1)}
-          >
-            Previous
-          </Button>
-          <Button
-            left={1300}
-            top={-100}
-            colorScheme={"orange"}
-            onClick={() => setPage((prev) => prev + 1)}
-          >
-            Next
-          </Button>
-        <>{error && <h1>ERROR</h1>}</>
-        {isFetching ? (
-          <Spinner />
-        ) : (
-          <PokemonNames pokemons={data!.pokemons.results} />
-        )}
-      </Box>
-    </>
+      <InfiniteScroll
+        dataLength={currentLength}
+        next={loadMore}
+        hasMore={hasMore}
+        scrollThreshold={0.7}
+        loader={<ShowLoading />}
+      >
+        {data && <PokemonNames pokemons={data!.pokemons.results} />}
+      </InfiniteScroll>
+      
+    </Box>
   );
 }

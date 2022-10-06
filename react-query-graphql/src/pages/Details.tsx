@@ -1,64 +1,39 @@
-
-import { Button, Spinner, Stack } from '@chakra-ui/react'
-import { Link } from '@tanstack/react-location'
-import request, { RequestDocument } from 'graphql-request';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import gql from 'graphql-tag';
-import { useQuery } from 'react-query';
-import PokemonDetails from '../components/PokemonDetails';
-import POKEMON_DETAIL from '../graphQL/POKEMON_DETAIL';
-import PokemonImage from '../components/PokemonImage';
+import { Link } from "@tanstack/react-location";
+import { useQuery } from '@apollo/client';
+import { Button, Stack } from "@chakra-ui/react";
+import PokemonMoves from "../components/PokemonMoves";
+import PokemonProfile from "../components/PokemonProfile";
+import ShowLoading from "../components/ShowLoading";
+import ShowError from "../components/ShowError";
+import { GET_POKEMON_DETAIL, PokemonDetailQuery } from "../graphQL/GetPokemonDetail";
 
 
+export default function Details() {
+  const queryParams = new URLSearchParams(window.location.search);
+  const name = queryParams.get("name");
+  const gqlVariables = {
+    variables: { name },
+  };
 
-export interface Pokemon {
-    type: {name: string;}
-};
+  const { loading, error, data } = useQuery<PokemonDetailQuery>(
+    GET_POKEMON_DETAIL,
+    gqlVariables
+  );
 
-interface PokemonQuery {
-    pokemon: {
-        id: number;
-        name: string;
-      };
-    };
+  return (
+    <Stack bg={"blue.200"} padding={4} >
+      <Link to="/" >
+        <Button left={1270} colorScheme={"blue"}>Go back to Home</Button>
+      </Link>
 
-const endpoint = "https://graphql-pokeapi.graphcdn.app/";
-
-function Details() {
-    const queryParams = new URLSearchParams(window.location.search);
-    const name = queryParams.get("name");
-    const variables = {name: name};
-
-    const pokesDetail = async () => request (
-        endpoint,
-        POKEMON_DETAIL,
-        variables
-    )
-
-    const { data, isFetching, error } = useQuery<PokemonQuery>('pokemon', pokesDetail)
-
-    if (error) return (<h1>Something went wrong!</h1>);
-
-    console.log(data);
-
-    return (
-        <Stack padding={4}>
-        
-        <Link to="/">
-          <Button bg={"orange"}>Go back to Home</Button>
-        </Link>
-
-        {!isFetching?         
-        (<>
-            <PokemonImage props={data!.pokemon} />
-            <PokemonDetails data={data}/>
-        </>) : (
-
-        (<Spinner />)
-        )}
-
-        </Stack>
-    )
+      {error && <ShowError />}
+      {loading && <ShowLoading />}
+      {data && (
+        <>
+          <PokemonProfile props={data!.pokemon} />
+          <PokemonMoves pokeMoves={data!.pokemon.moves} />
+        </>
+      )}
+    </Stack>
+  );
 }
-
-export default Details
